@@ -234,7 +234,7 @@
     </div>
 
     <script>
-        const symbols = ['15', '20', '25'];
+        const symbols = ['🍎', '🍌', '🍇', '🍓', '🍒', '🍊', '🥝', '🍉'];
         const cards = [...symbols, ...symbols];
         let flippedCards = [];
         let matchedPairs = 0;
@@ -409,13 +409,20 @@
         }
 
         function flipCard() {
-            if (!gameActive || !canFlip || this.classList.contains('flipped') || this.classList.contains('matched')) {
+            if (!gameActive || this.classList.contains('flipped') || this.classList.contains('matched')) {
                 return;
             }
 
+            // قلب الكارت
             this.classList.add('flipped');
             flippedCards.push(this);
 
+            // لو ده أول كارت، خليه مفتوح واستنى التاني
+            if (flippedCards.length === 1) {
+                return;
+            }
+
+            // لو ده تاني كارت، منع أي تقليب إضافي
             if (flippedCards.length === 2) {
                 canFlip = false;
                 attempts++;
