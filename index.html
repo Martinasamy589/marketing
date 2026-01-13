@@ -1,462 +1,416 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة الكروت المتشابهة</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لعبة تطابق الأرقام</title>
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
-        .container {
-            text-align: center;
-        }
+body{
+    font-family:Segoe UI,Tahoma;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:#fff;
+    overflow:hidden;
+}
 
-        h1 {
-            color: white;
-            margin-bottom: 20px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
+.container{
+    text-align:center;
+    z-index:2;
+}
 
-        .welcome-screen {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            max-width: 500px;
-            width: 100%;
-        }
+h1{
+    margin-bottom:20px;
+}
 
-        .welcome-screen h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-        }
+.info{
+    margin-bottom:15px;
+    font-size:18px;
+}
 
-        .welcome-screen p {
-            color: #666;
-            margin-bottom: 25px;
-            line-height: 1.6;
-        }
+.game-board{
+    display:grid;
+    grid-template-columns:repeat(3,120px);
+    gap:20px;
+    padding:25px;
+    background:rgba(255,255,255,0.15);
+    border-radius:15px;
+    justify-content:center;
+    margin:0 auto;
+}
 
-        .error-screen {
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            max-width: 500px;
-            width: 100%;
-        }
+.card{
+    width:120px;
+    height:120px;
+    transform-style:preserve-3d;
+    transition:transform 0.6s;
+    cursor:pointer;
+    position:relative;
+}
 
-        .error-screen h2 {
-            color: #dc2626;
-            margin-bottom: 20px;
-        }
+.card.flipped{
+    transform:rotateY(180deg);
+}
 
-        .error-screen p {
-            color: #666;
-            line-height: 1.6;
-        }
+.card.matched{
+    opacity:0.6;
+    pointer-events:none;
+}
 
-        button {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
+.card-face{
+    position:absolute;
+    width:100%;
+    height:100%;
+    backface-visibility:hidden;
+    border-radius:10px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:36px;
+    font-weight:bold;
+}
 
-        button:hover {
-            transform: translateY(-2px);
-        }
+.card-front{
+    background:#5a67d8;
+}
 
-        .hidden {
-            display: none !important;
-        }
+.card-back{
+    background:#fff;
+    color:#000;
+    transform:rotateY(180deg);
+}
 
-        .info {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 1.2em;
-        }
+/* شاشة الاحتفال */
+.celebration{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.75);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    font-size:90px;
+    font-weight:bold;
+    color:#4ade80;
+    text-shadow:0 0 25px #22c55e;
+    animation:pop 0.5s ease;
+    z-index:5;
+}
 
-        .game-board {
-            display: grid;
-            grid-template-columns: repeat(4, 120px);
-            gap: 15px;
-            margin: 0 auto;
-            padding: 20px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-        }
+@keyframes pop{
+    from{transform:scale(0)}
+    to{transform:scale(1)}
+}
 
-        .card {
-            width: 120px;
-            height: 120px;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.6s;
-            cursor: pointer;
-        }
+.hidden{
+    display:none;
+}
 
-        .card.flipped {
-            transform: rotateY(180deg);
-        }
+/* Confetti */
+.confetti{
+    position:fixed;
+    width:10px;
+    height:10px;
+    top:-10px;
+    animation:fall linear forwards;
+}
 
-        .card.matched {
-            opacity: 0.6;
-            pointer-events: none;
-        }
+@keyframes fall{
+    to{
+        transform:translateY(110vh) rotate(360deg);
+        opacity:0;
+    }
+}
 
-        .card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            font-size: 3em;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        }
+/* شاشة التحميل */
+.loading{
+    text-align:center;
+    font-size:24px;
+}
 
-        .card-front {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            font-weight: bold;
-        }
+/* شاشة الخطأ */
+.error-screen{
+    background:rgba(255,255,255,0.95);
+    padding:40px;
+    border-radius:15px;
+    max-width:500px;
+    color:#333;
+}
 
-        .card-back {
-            background: white;
-            transform: rotateY(180deg);
-        }
+.error-screen h2{
+    color:#dc2626;
+    margin-bottom:20px;
+}
 
-        .result {
-            margin-top: 20px;
-            font-size: 1.5em;
-            color: white;
-            font-weight: bold;
-            min-height: 40px;
-        }
-
-        .win {
-            color: #4ade80;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .loading {
-            text-align: center;
-            color: white;
-            font-size: 1.5em;
-        }
-
-        @media (max-width: 600px) {
-            .game-board {
-                grid-template-columns: repeat(4, 80px);
-                gap: 10px;
-            }
-
-            .card {
-                width: 80px;
-                height: 80px;
-            }
-
-            .card-face {
-                font-size: 2em;
-            }
-
-            .welcome-screen, .error-screen {
-                padding: 25px;
-            }
-
-            h1 {
-                font-size: 1.8em;
-            }
-        }
-    </style>
+.error-screen p{
+    color:#666;
+    line-height:1.6;
+    font-size:18px;
+}
+</style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>🎮 لعبة الكروت المتشابهة</h1>
 
-        <!-- شاشة التحميل -->
-        <div class="loading" id="loadingScreen">
-            <p>جاري التحقق من الجهاز...</p>
-        </div>
+<!-- شاشة التحميل -->
+<div class="loading" id="loadingScreen">
+    <p>جاري التحقق من الجهاز...</p>
+</div>
 
-        <!-- شاشة الترحيب -->
-        <div class="welcome-screen hidden" id="welcomeScreen">
-            <h2>مرحباً بك! 👋</h2>
-            <p>استعد للعب لعبة مسلية! حاول تلاقي كل الكروت المتشابهة في أقل عدد من المحاولات.</p>
-            <p><strong>ملحوظة:</strong> كل شخص يمكنه اللعب مرة واحدة فقط من نفس الجهاز.</p>
-            <button onclick="startGame()">ابدأ اللعب</button>
-        </div>
+<!-- شاشة الخطأ -->
+<div class="error-screen hidden" id="errorScreen">
+    <h2>⚠️ عذراً!</h2>
+    <p>يبدو أنك لعبت من قبل من هذا الجهاز.</p>
+    <p>كل شخص يمكنه اللعب مرة واحدة فقط. شكراً لمشاركتك! 🙏</p>
+</div>
 
-        <!-- شاشة الخطأ -->
-        <div class="error-screen hidden" id="errorScreen">
-            <h2>⚠️ عذراً!</h2>
-            <p>يبدو أنك لعبت من قبل من هذا الجهاز.</p>
-            <p>كل شخص يمكنه اللعب مرة واحدة فقط. شكراً لمشاركتك! 🙏</p>
-        </div>
+<!-- اللعبة -->
+<div class="container hidden" id="gameContainer">
+    <h1>🎯 لعبة تطابق الأرقام</h1>
 
-        <!-- شاشة اللعبة -->
-        <div class="hidden" id="gameScreen">
-            <div class="info">
-                <div>المحاولات: <span id="attempts">0</span></div>
-            </div>
-            <div class="game-board" id="gameBoard"></div>
-            <div class="result" id="result"></div>
-        </div>
+    <div class="info">
+        المحاولات: <span id="attempts">0</span>
     </div>
 
-    <script>
-        const symbols = ['🍎', '🍌', '🍇', '🍓', '🍒', '🍊', '🥝', '🍉'];
-        const cards = [...symbols, ...symbols];
-        let flippedCards = [];
-        let matchedPairs = 0;
-        let attempts = 0;
-        let canFlip = true;
-        let gameActive = false;
+    <div class="game-board" id="gameBoard"></div>
+</div>
 
-        // دالة لإنشاء بصمة المتصفح (Browser Fingerprint)
-        async function generateFingerprint() {
-            const components = [];
+<!-- شاشة الاحتفال -->
+<div class="celebration hidden" id="celebration">
+    🎉 <span id="celebrationNumber"></span> 🎉
+    <div style="font-size:32px;margin-top:20px;">
+        مبروك 🎊 أول تطابق صح!
+    </div>
+</div>
 
-            // معلومات المتصفح
-            components.push(navigator.userAgent);
-            components.push(navigator.language);
-            components.push(navigator.platform);
-            components.push(navigator.hardwareConcurrency || 0);
-            components.push(navigator.deviceMemory || 0);
+<script>
+// 3 أرقام × 2 = 6 كروت
+const numbers = [15, 20, 25];
+const cards = [...numbers, ...numbers];
 
-            // معلومات الشاشة
-            components.push(screen.width);
-            components.push(screen.height);
-            components.push(screen.colorDepth);
-            components.push(screen.pixelDepth);
-            components.push(window.devicePixelRatio);
+let flippedCards = [];
+let attempts = 0;
+let canFlip = true;
+let gameOver = false;
 
-            // المنطقة الزمنية
-            components.push(new Date().getTimezoneOffset());
+// ============ Browser Fingerprinting ============
 
-            // Canvas Fingerprint - بصمة فريدة جداً
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = 200;
-            canvas.height = 50;
-            ctx.textBaseline = 'top';
-            ctx.font = '14px Arial';
-            ctx.fillStyle = '#f60';
-            ctx.fillRect(125, 1, 62, 20);
-            ctx.fillStyle = '#069';
-            ctx.fillText('Browser Fingerprint', 2, 15);
-            components.push(canvas.toDataURL());
+async function generateFingerprint() {
+    const components = [];
 
-            // WebGL Fingerprint
-            try {
-                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-                if (gl) {
-                    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                    if (debugInfo) {
-                        components.push(gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL));
-                        components.push(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL));
-                    }
-                }
-            } catch (e) {}
+    // معلومات المتصفح
+    components.push(navigator.userAgent);
+    components.push(navigator.language);
+    components.push(navigator.platform);
+    components.push(navigator.hardwareConcurrency || 0);
+    components.push(navigator.deviceMemory || 0);
 
-            // Fonts Detection
-            const fonts = ['Arial', 'Verdana', 'Courier New', 'Georgia', 'Times New Roman'];
-            const baseFonts = ['monospace', 'sans-serif', 'serif'];
-            const testString = 'mmmmmmmmmmlli';
-            const testSize = '72px';
-            
-            const span = document.createElement('span');
-            span.style.fontSize = testSize;
-            span.style.position = 'absolute';
-            span.style.left = '-9999px';
-            span.innerHTML = testString;
-            document.body.appendChild(span);
+    // معلومات الشاشة
+    components.push(screen.width);
+    components.push(screen.height);
+    components.push(screen.colorDepth);
+    components.push(screen.pixelDepth);
+    components.push(window.devicePixelRatio);
 
-            const detectedFonts = [];
-            fonts.forEach(font => {
-                baseFonts.forEach(baseFont => {
-                    span.style.fontFamily = `${font}, ${baseFont}`;
-                    detectedFonts.push(span.offsetWidth + 'x' + span.offsetHeight);
-                });
-            });
-            document.body.removeChild(span);
-            components.push(detectedFonts.join(','));
+    // المنطقة الزمنية
+    components.push(new Date().getTimezoneOffset());
 
-            // Plugins
-            const plugins = Array.from(navigator.plugins || [])
-                .map(p => p.name)
-                .join(',');
-            components.push(plugins);
+    // Canvas Fingerprint
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 200;
+    canvas.height = 50;
+    ctx.textBaseline = 'top';
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#f60';
+    ctx.fillRect(125, 1, 62, 20);
+    ctx.fillStyle = '#069';
+    ctx.fillText('Browser Fingerprint', 2, 15);
+    components.push(canvas.toDataURL());
 
-            // تحويل كل المعلومات لـ hash واحد
-            const fingerprint = await hashString(components.join('|||'));
-            return fingerprint;
-        }
-
-        // دالة لعمل hash للنص
-        async function hashString(str) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(str);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-            return hashHex;
-        }
-
-        // التحقق من اللاعبين السابقين
-        function hasPlayed(fingerprint) {
-            const players = JSON.parse(localStorage.getItem('playedFingerprints') || '[]');
-            return players.includes(fingerprint);
-        }
-
-        function markAsPlayed(fingerprint) {
-            const players = JSON.parse(localStorage.getItem('playedFingerprints') || '[]');
-            players.push(fingerprint);
-            localStorage.setItem('playedFingerprints', JSON.stringify(players));
-        }
-
-        // فحص الجهاز عند تحميل الصفحة
-        async function checkDevice() {
-            try {
-                const fingerprint = await generateFingerprint();
-                console.log('Device Fingerprint:', fingerprint);
-
-                if (hasPlayed(fingerprint)) {
-                    // الجهاز لعب من قبل
-                    document.getElementById('loadingScreen').classList.add('hidden');
-                    document.getElementById('errorScreen').classList.remove('hidden');
-                } else {
-                    // جهاز جديد - يمكنه اللعب
-                    window.currentFingerprint = fingerprint;
-                    document.getElementById('loadingScreen').classList.add('hidden');
-                    document.getElementById('welcomeScreen').classList.remove('hidden');
-                }
-            } catch (error) {
-                console.error('Error generating fingerprint:', error);
-                // في حالة حدوث خطأ، نسمح باللعب
-                document.getElementById('loadingScreen').classList.add('hidden');
-                document.getElementById('welcomeScreen').classList.remove('hidden');
+    // WebGL Fingerprint
+    try {
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (gl) {
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            if (debugInfo) {
+                components.push(gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL));
+                components.push(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL));
             }
         }
+    } catch (e) {}
 
-        function startGame() {
-            // حفظ بصمة الجهاز
-            if (window.currentFingerprint) {
-                markAsPlayed(window.currentFingerprint);
-            }
+    // Fonts Detection
+    const fonts = ['Arial', 'Verdana', 'Courier New', 'Georgia', 'Times New Roman'];
+    const baseFonts = ['monospace', 'sans-serif', 'serif'];
+    const testString = 'mmmmmmmmmmlli';
+    const testSize = '72px';
+    
+    const span = document.createElement('span');
+    span.style.fontSize = testSize;
+    span.style.position = 'absolute';
+    span.style.left = '-9999px';
+    span.innerHTML = testString;
+    document.body.appendChild(span);
 
-            document.getElementById('welcomeScreen').classList.add('hidden');
-            document.getElementById('gameScreen').classList.remove('hidden');
-            gameActive = true;
+    const detectedFonts = [];
+    fonts.forEach(font => {
+        baseFonts.forEach(baseFont => {
+            span.style.fontFamily = `${font}, ${baseFont}`;
+            detectedFonts.push(span.offsetWidth + 'x' + span.offsetHeight);
+        });
+    });
+    document.body.removeChild(span);
+    components.push(detectedFonts.join(','));
+
+    // Plugins
+    const plugins = Array.from(navigator.plugins || [])
+        .map(p => p.name)
+        .join(',');
+    components.push(plugins);
+
+    const fingerprint = await hashString(components.join('|||'));
+    return fingerprint;
+}
+
+async function hashString(str) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(str);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+}
+
+function hasPlayed(fingerprint) {
+    const players = JSON.parse(localStorage.getItem('playedFingerprints') || '[]');
+    return players.includes(fingerprint);
+}
+
+function markAsPlayed(fingerprint) {
+    const players = JSON.parse(localStorage.getItem('playedFingerprints') || '[]');
+    players.push(fingerprint);
+    localStorage.setItem('playedFingerprints', JSON.stringify(players));
+}
+
+async function checkDevice() {
+    try {
+        const fingerprint = await generateFingerprint();
+        console.log('Device Fingerprint:', fingerprint);
+
+        if (hasPlayed(fingerprint)) {
+            // الجهاز لعب من قبل
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('errorScreen').classList.remove('hidden');
+        } else {
+            // جهاز جديد - حفظ البصمة وبدء اللعبة
+            markAsPlayed(fingerprint);
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('gameContainer').classList.remove('hidden');
             createBoard();
         }
+    } catch (error) {
+        console.error('Error generating fingerprint:', error);
+        // في حالة حدوث خطأ، نسمح باللعب
+        document.getElementById('loadingScreen').classList.add('hidden');
+        document.getElementById('gameContainer').classList.remove('hidden');
+        createBoard();
+    }
+}
 
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
+// ============ Game Logic ============
 
-        function createBoard() {
-            const gameBoard = document.getElementById('gameBoard');
-            const shuffledCards = shuffle(cards);
+function shuffle(array){
+    for(let i=array.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [array[i],array[j]]=[array[j],array[i]];
+    }
+    return array;
+}
 
-            shuffledCards.forEach((symbol, index) => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.dataset.symbol = symbol;
-                card.dataset.index = index;
+function createBoard(){
+    const board = document.getElementById("gameBoard");
+    shuffle(cards).forEach((number)=>{
+        const card = document.createElement("div");
+        card.className="card";
+        card.dataset.number=number;
 
-                card.innerHTML = `
-                    <div class="card-face card-front">?</div>
-                    <div class="card-face card-back">${symbol}</div>
-                `;
+        card.innerHTML=`
+            <div class="card-face card-front">?</div>
+            <div class="card-face card-back">${number}</div>
+        `;
 
-                card.addEventListener('click', flipCard);
-                gameBoard.appendChild(card);
-            });
-        }
+        card.addEventListener("click", flipCard);
+        board.appendChild(card);
+    });
+}
 
-        function flipCard() {
-            if (!gameActive || this.classList.contains('matched')) {
-                return;
-            }
+function flipCard(){
+    if(gameOver || !canFlip || this.classList.contains("matched")) return;
+    if(flippedCards.includes(this)) return;
 
-            // لو الكارت ده مقلوب من قبل في نفس المحاولة، متعملش حاجة
-            if (flippedCards.includes(this)) {
-                return;
-            }
+    this.classList.add("flipped");
+    flippedCards.push(this);
 
-            // قلب الكارت
-            this.classList.add('flipped');
-            flippedCards.push(this);
+    if(flippedCards.length === 2){
+        canFlip = false;
+        attempts++;
+        document.getElementById("attempts").textContent = attempts;
+        checkMatch();
+    }
+}
 
-            // لو ده تاني كارت، اعمل check
-            if (flippedCards.length === 2) {
-                attempts++;
-                document.getElementById('attempts').textContent = attempts;
-                checkMatch();
-            }
-        }
+function checkMatch(){
+    const [card1, card2] = flippedCards;
 
-        function checkMatch() {
-            const [card1, card2] = flippedCards;
-            const symbol1 = card1.dataset.symbol;
-            const symbol2 = card2.dataset.symbol;
+    if(card1.dataset.number === card2.dataset.number){
+        gameOver = true;
 
-            if (symbol1 === symbol2) {
-                // كسب! أول زوج صح
-                card1.classList.add('matched');
-                card2.classList.add('matched');
-                
-                setTimeout(() => {
-                    document.getElementById('result').innerHTML = 
-                        `<div class="win">🎉 مبروك! فزت باللعبة في ${attempts} محاولة! 🎉</div>`;
-                    gameActive = false;
-                }, 500);
-            } else {
-                // غلط - قفل الكروت وامسح الأرراي عشان تبدأ محاولة جديدة
-                setTimeout(() => {
-                    card1.classList.remove('flipped');
-                    card2.classList.remove('flipped');
-                    flippedCards = [];
-                }, 1000);
-            }
-        }
+        card1.classList.add("matched");
+        card2.classList.add("matched");
 
-        // بدء الفحص عند تحميل الصفحة
-        checkDevice();
-    </script>
+        showCelebration(card1.dataset.number);
+    }else{
+        setTimeout(()=>{
+            card1.classList.remove("flipped");
+            card2.classList.remove("flipped");
+            flippedCards = [];
+            canFlip = true;
+        }, 1000);
+    }
+}
+
+function showCelebration(number){
+    document.getElementById("celebrationNumber").textContent = number;
+    document.getElementById("celebration").classList.remove("hidden");
+    createConfetti();
+}
+
+function createConfetti(){
+    for(let i=0;i<70;i++){
+        const confetti = document.createElement("div");
+        confetti.className = "confetti";
+        confetti.style.left = Math.random()*100 + "vw";
+        confetti.style.backgroundColor = `hsl(${Math.random()*360},100%,50%)`;
+        confetti.style.animationDuration = (Math.random()*2 + 1) + "s";
+        document.body.appendChild(confetti);
+
+        setTimeout(()=>confetti.remove(),3000);
+    }
+}
+
+// بدء الفحص عند تحميل الصفحة
+checkDevice();
+</script>
+
 </body>
 </html>
