@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة الكروت المتشابهة</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .welcome-screen {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .welcome-screen h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .welcome-screen p {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .error-screen {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .error-screen h2 {
+            color: #dc2626;
+            margin-bottom: 20px;
+        }
+
+        .error-screen p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .info {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 120px);
+            gap: 15px;
+            margin: 0 auto;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-size: 3em;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .card-back {
+            background: white;
+            transform: rotateY(180deg);
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 1.5em;
+            color: white;
+            font-weight: bold;
+            min-height: 40px;
+        }
+
+        .win {
+            color: #4ade80;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.5em;
+        }
+
+        @media (max-width: 600px) {
+            .game-board {
+                grid-template-columns: repeat(4, 80px);
+                gap: 10px;
+            }
+
+            .card {
+                width: 80px;
+                height: 80px;
+            }
+
+            .card-face {
+                font-size: 2em;
+            }
+
+            .welcome-screen, .error-screen {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 لعبة الكروت المتشابهة</h1>
+
+        <!-- شاشة التحميل -->
+        <div class="loading" id="loadingScreen">
+            <p>جاري التحقق من الجهاز...</p>
+        </div>
+
+        <!-- شاشة الترحيب -->
+        <div class="welcome-screen hidden" id="welcomeScreen">
+            <h2>مرحباً بك! 👋</h2>
+            <p>استعد للعب لعبة مسلية! حاول تلاقي كل الكروت المتشابهة في أقل عدد من المحاولات.</p>
+            <p><strong>ملحوظة:</strong> كل شخص يمكنه اللعب مرة واحدة فقط من نفس الجهاز.</p>
+            <button onclick="startGame()">ابدأ اللعب</button>
+        </div>
+
+        <!-- شاشة الخطأ -->
+        <div class="error-screen hidden" id="errorScreen">
+            <h2>⚠️ عذراً!</h2>
+            <p>يبدو أنك لعبت من قبل من هذا الجهاز.</p>
+            <p>كل شخص يمكنه اللعب مرة واحدة فقط. شكراً لمشاركتك! 🙏</p>
+        </div>
+
+        <!-- شاشة اللعبة -->
+        <div class="hidden" id="gameScreen">
+            <div class="info">
+                <div>المحاولات: <span id="attempts">0</span></div>
+            </div>
+            <div class="game-board" id="gameBoard"></div>
+            <div class="result" id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const symbols = ['15', '20', '25'];
+        const cards = [...symbols, ...symbols];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let attempts = 0;
+        let canFlip = true;
+        let gameActive = false;
+
+        // دالة لإنشاء بصمة المتصفح (Browser Fingerprint)
+        async function generateFingerprint() {
+            const components = [];
+
+            // معلومات المتصفح
+            components.push(navigator.userAgent);
+            components.push(navigator.language);
+            components.push(navigator.platform);
+            components.push(navigator.hardwareConcurrency || 0);
+            components.push(navigator.deviceMemory || 0);
+
+            // معلومات الشاشة
+            components.push(screen.width);
+            components.push(screen.height);
+            components.push(screen.colorDepth);
+            components.push(screen.pixelDepth);
+            components.push(window.devicePixelRatio);
+
+            // المنطقة الزمنية
+            components.push(new Date().getTimezoneOffset());
+
+            // Canvas Fingerprint - بصمة فريدة جداً
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 200;
+            canvas.height = 50;
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillStyle = '#f60';
+            ctx.fillRect(125, 1, 62, 20);
+            ctx.fillStyle = '#069';
+            ctx.fillText('Browser Fingerprint', 2, 15);
+            components.push(canvas.toDataURL());
+
+            // WebGL Fingerprint
+            try {
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                if (gl) {
+                    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                    if (debugInfo) {
+                        components.push(gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL));
+                        components.push(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL));
+                    }
+                }
+            } catch (e) {}
+
+            // Fonts Detection
+            const fonts = ['Arial', 'Verdana', 'Courier New', 'Georgia', 'Times New Roman'];
+            const baseFonts = ['monospace', 'sans-serif', 'serif'];
+            const testString = 'mmmmmmmmmmlli';
+            const testSize = '72px';
+            
+            const span = document.createElement('span');
+            span.style.fontSize = testSize;
+            span.style.position = 'absolute';
+            span.style.left = '-9999px';
+            span.innerHTML = testString;
+            document.body.appendChild(span);
+
+            const detectedFonts = [];
+            fonts.forEach(font => {
+                baseFonts.forEach(baseFont => {
+                    span.style.fontFamily = `${font}, ${baseFont}`;
+                    detectedFonts.push(span.offsetWidth + 'x' + span.offsetHeight);
+                });
+            });
+            document.body.removeChild(span);
+            components.push(detectedFonts.join(','));
+
+            // Plugins
+            const plugins = Array.from(navigator.plugins || [])
+                .map(p => p.name)
+                .join(',');
+            components.push(plugins);
+
+            // تحويل كل المعلومات لـ hash واحد
+            const fingerprint = await hashString(components.join('|||'));
+            return fingerprint;
+        }
+
+        // دالة لعمل hash للنص
+        async function hashString(str) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(str);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        // التحقق من اللاعبين السابقين
+        function hasPlayed(fingerprint) {
+            const players = JSON.parse(localStorage.getItem('playedFingerprints') || '[]');
+            return players.includes(fingerprint);
+        }
+
+        function markAsPlayed(fingerprint) {
+            const players = JSON.parse(localStorage.getItem('playedFingerprints') || '[]');
+            players.push(fingerprint);
+            localStorage.setItem('playedFingerprints', JSON.stringify(players));
+        }
+
+        // فحص الجهاز عند تحميل الصفحة
+        async function checkDevice() {
+            try {
+                const fingerprint = await generateFingerprint();
+                console.log('Device Fingerprint:', fingerprint);
+
+                if (hasPlayed(fingerprint)) {
+                    // الجهاز لعب من قبل
+                    document.getElementById('loadingScreen').classList.add('hidden');
+                    document.getElementById('errorScreen').classList.remove('hidden');
+                } else {
+                    // جهاز جديد - يمكنه اللعب
+                    window.currentFingerprint = fingerprint;
+                    document.getElementById('loadingScreen').classList.add('hidden');
+                    document.getElementById('welcomeScreen').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error generating fingerprint:', error);
+                // في حالة حدوث خطأ، نسمح باللعب
+                document.getElementById('loadingScreen').classList.add('hidden');
+                document.getElementById('welcomeScreen').classList.remove('hidden');
+            }
+        }
+
+        function startGame() {
+            // حفظ بصمة الجهاز
+            if (window.currentFingerprint) {
+                markAsPlayed(window.currentFingerprint);
+            }
+
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            gameActive = true;
+            createBoard();
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function createBoard() {
+            const gameBoard = document.getElementById('gameBoard');
+            const shuffledCards = shuffle(cards);
+
+            shuffledCards.forEach((symbol, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.symbol = symbol;
+                card.dataset.index = index;
+
+                card.innerHTML = `
+                    <div class="card-face card-front">?</div>
+                    <div class="card-face card-back">${symbol}</div>
+                `;
+
+                card.addEventListener('click', flipCard);
+                gameBoard.appendChild(card);
+            });
+        }
+
+        function flipCard() {
+            if (!gameActive || !canFlip || this.classList.contains('flipped') || this.classList.contains('matched')) {
+                return;
+            }
+
+            this.classList.add('flipped');
+            flippedCards.push(this);
+
+            if (flippedCards.length === 2) {
+                canFlip = false;
+                attempts++;
+                document.getElementById('attempts').textContent = attempts;
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            const symbol1 = card1.dataset.symbol;
+            const symbol2 = card2.dataset.symbol;
+
+            if (symbol1 === symbol2) {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedPairs++;
+
+                flippedCards = [];
+                canFlip = true;
+
+                if (matchedPairs === symbols.length) {
+                    setTimeout(() => {
+                        document.getElementById('result').innerHTML = 
+                            `<div class="win">🎉 مبروك! فزت باللعبة في ${attempts} محاولة! 🎉</div>`;
+                        gameActive = false;
+                    }, 500);
+                }
+            } else {
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    flippedCards = [];
+                    canFlip = true;
+                }, 1000);
+            }
+        }
+
+        // بدء الفحص عند تحميل الصفحة
+        checkDevice();
+    </script>
+</body>
+</html>
