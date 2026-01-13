@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لعبة تطابق الأرقام</title>
+<title>لعبة تطابق الأرقام وعجلة الحظ</title>
 
 <style>
 *{
@@ -18,14 +18,16 @@ body{
     min-height:100vh;
     display:flex;
     justify-content:center;
-    align-items:center;
+    align-items:flex-start;
     color:#fff;
-    overflow:hidden;
+    overflow-x:hidden;
+    padding-top:30px;
 }
 
 .container{
     text-align:center;
     z-index:2;
+    margin-bottom:50px;
 }
 
 h1{
@@ -45,7 +47,7 @@ h1{
     background:rgba(255,255,255,0.15);
     border-radius:15px;
     justify-content:center;
-    margin:0 auto;
+    margin:0 auto 50px auto;
 }
 
 .card{
@@ -131,19 +133,21 @@ h1{
     }
 }
 
-/* شاشة التحميل */
+/* شاشة التحميل - معطلة مؤقتاً */
 .loading{
     text-align:center;
     font-size:24px;
+    display:none;
 }
 
-/* شاشة الخطأ */
+/* شاشة الخطأ - معطلة مؤقتاً */
 .error-screen{
     background:rgba(255,255,255,0.95);
     padding:40px;
     border-radius:15px;
     max-width:500px;
     color:#333;
+    display:none;
 }
 
 .error-screen h2{
@@ -156,25 +160,141 @@ h1{
     line-height:1.6;
     font-size:18px;
 }
+
+/* عجلة الحظ */
+.wheel-section{
+    margin-top:60px;
+    padding-top:40px;
+    border-top:2px solid rgba(255,255,255,0.3);
+}
+
+.wheel-section h2{
+    margin-bottom:30px;
+    font-size:32px;
+}
+
+.wheel-container{
+    margin:0 auto;
+    position:relative;
+    width:350px;
+    height:350px;
+}
+
+.wheel{
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    border:12px solid #facc15;
+    position:relative;
+    overflow:hidden;
+    transition:transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+    box-shadow:0 10px 40px rgba(0,0,0,0.4);
+}
+
+.segment{
+    position:absolute;
+    width:50%;
+    height:50%;
+    top:50%;
+    left:50%;
+    transform-origin:0% 0%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:40px;
+    font-weight:bold;
+    color:#fff;
+    clip-path:polygon(0 0, 100% 0, 0 100%);
+    padding-right:60px;
+    padding-bottom:60px;
+}
+
+.segment span{
+    transform:rotate(-15deg);
+    text-shadow:3px 3px 8px rgba(0,0,0,0.7);
+}
+
+.wheel-center{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -50%);
+    width:100px;
+    height:100px;
+    background:#facc15;
+    border-radius:50%;
+    border:6px solid #f59e0b;
+    z-index:10;
+    box-shadow:0 6px 20px rgba(0,0,0,0.4);
+}
+
+#wheelPointer{
+    position:absolute;
+    top:-20px;
+    left:50%;
+    transform:translateX(-50%);
+    width:0;
+    height:0;
+    border-left:20px solid transparent;
+    border-right:20px solid transparent;
+    border-top:40px solid #facc15;
+    z-index:15;
+    filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
+
+#spinBtn{
+    margin-top:30px;
+    padding:15px 40px;
+    font-size:20px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    background:#facc15;
+    color:#000;
+    font-weight:bold;
+    transition:all 0.3s;
+    box-shadow:0 4px 15px rgba(250,204,21,0.4);
+}
+
+#spinBtn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 6px 20px rgba(250,204,21,0.6);
+}
+
+#spinBtn:active{
+    transform:translateY(0);
+}
+
+#spinBtn:disabled{
+    opacity:0.5;
+    cursor:not-allowed;
+}
+
+#result{
+    margin-top:25px;
+    font-size:26px;
+    font-weight:bold;
+    min-height:35px;
+    text-shadow:2px 2px 4px rgba(0,0,0,0.3);
+}
+
+@media (max-width: 600px){
+    .wheel-container{
+        width:280px;
+        height:280px;
+    }
+    
+    .segment span{
+        font-size:22px;
+    }
+}
 </style>
 </head>
 
 <body>
 
-<!-- شاشة التحميل -->
-<div class="loading" id="loadingScreen">
-    <p>جاري التحقق من الجهاز...</p>
-</div>
-
-<!-- شاشة الخطأ -->
-<div class="error-screen hidden" id="errorScreen">
-    <h2>⚠️ عذراً!</h2>
-    <p>يبدو أنك لعبت من قبل من هذا الجهاز.</p>
-    <p>كل شخص يمكنه اللعب مرة واحدة فقط. شكراً لمشاركتك! 🙏</p>
-</div>
-
 <!-- اللعبة -->
-<div class="container hidden" id="gameContainer">
+<div class="container" id="gameContainer">
     <h1>🎯 لعبة تطابق الأرقام</h1>
 
     <div class="info">
@@ -182,6 +302,19 @@ h1{
     </div>
 
     <div class="game-board" id="gameBoard"></div>
+
+    <!-- عجلة الحظ -->
+    <div class="wheel-section">
+        <h2>🎡 عجلة الحظ</h2>
+        <div class="wheel-container">
+            <div id="wheelPointer"></div>
+            <div class="wheel" id="wheel">
+                <div class="wheel-center"></div>
+            </div>
+            <button id="spinBtn">ادفع العجلة</button>
+            <div id="result"></div>
+        </div>
+    </div>
 </div>
 
 <!-- شاشة الاحتفال -->
@@ -193,7 +326,7 @@ h1{
 </div>
 
 <script>
-// 3 أرقام × 2 = 6 كروت
+// ============ Game Logic ============
 const numbers = [15, 20, 25];
 const cards = [...numbers, ...numbers];
 
@@ -201,133 +334,6 @@ let flippedCards = [];
 let attempts = 0;
 let canFlip = true;
 let gameOver = false;
-
-// ============ Browser Fingerprinting ============
-
-async function generateFingerprint() {
-    const components = [];
-
-    // معلومات المتصفح
-    components.push(navigator.userAgent);
-    components.push(navigator.language);
-    components.push(navigator.platform);
-    components.push(navigator.hardwareConcurrency || 0);
-    components.push(navigator.deviceMemory || 0);
-
-    // معلومات الشاشة
-    components.push(screen.width);
-    components.push(screen.height);
-    components.push(screen.colorDepth);
-    components.push(screen.pixelDepth);
-    components.push(window.devicePixelRatio);
-
-    // المنطقة الزمنية
-    components.push(new Date().getTimezoneOffset());
-
-    // Canvas Fingerprint
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = 200;
-    canvas.height = 50;
-    ctx.textBaseline = 'top';
-    ctx.font = '14px Arial';
-    ctx.fillStyle = '#f60';
-    ctx.fillRect(125, 1, 62, 20);
-    ctx.fillStyle = '#069';
-    ctx.fillText('Browser Fingerprint', 2, 15);
-    components.push(canvas.toDataURL());
-
-    // WebGL Fingerprint
-    try {
-        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-        if (gl) {
-            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-            if (debugInfo) {
-                components.push(gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL));
-                components.push(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL));
-            }
-        }
-    } catch (e) {}
-
-    // Fonts Detection
-    const fonts = ['Arial', 'Verdana', 'Courier New', 'Georgia', 'Times New Roman'];
-    const baseFonts = ['monospace', 'sans-serif', 'serif'];
-    const testString = 'mmmmmmmmmmlli';
-    const testSize = '72px';
-    
-    const span = document.createElement('span');
-    span.style.fontSize = testSize;
-    span.style.position = 'absolute';
-    span.style.left = '-9999px';
-    span.innerHTML = testString;
-    document.body.appendChild(span);
-
-    const detectedFonts = [];
-    fonts.forEach(font => {
-        baseFonts.forEach(baseFont => {
-            span.style.fontFamily = `${font}, ${baseFont}`;
-            detectedFonts.push(span.offsetWidth + 'x' + span.offsetHeight);
-        });
-    });
-    document.body.removeChild(span);
-    components.push(detectedFonts.join(','));
-
-    // Plugins
-    const plugins = Array.from(navigator.plugins || [])
-        .map(p => p.name)
-        .join(',');
-    components.push(plugins);
-
-    const fingerprint = await hashString(components.join('|||'));
-    return fingerprint;
-}
-
-async function hashString(str) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(str);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    return hashHex;
-}
-
-function hasPlayed(fingerprint) {
-    const players = JSON.parse(localStorage.getItem('playedFingerprints') || '[]');
-    return players.includes(fingerprint);
-}
-
-function markAsPlayed(fingerprint) {
-    const players = JSON.parse(localStorage.getItem('playedFingerprints') || '[]');
-    players.push(fingerprint);
-    localStorage.setItem('playedFingerprints', JSON.stringify(players));
-}
-
-async function checkDevice() {
-    try {
-        const fingerprint = await generateFingerprint();
-        console.log('Device Fingerprint:', fingerprint);
-
-        if (hasPlayed(fingerprint)) {
-            // الجهاز لعب من قبل
-            document.getElementById('loadingScreen').classList.add('hidden');
-            document.getElementById('errorScreen').classList.remove('hidden');
-        } else {
-            // جهاز جديد - حفظ البصمة وبدء اللعبة
-            markAsPlayed(fingerprint);
-            document.getElementById('loadingScreen').classList.add('hidden');
-            document.getElementById('gameContainer').classList.remove('hidden');
-            createBoard();
-        }
-    } catch (error) {
-        console.error('Error generating fingerprint:', error);
-        // في حالة حدوث خطأ، نسمح باللعب
-        document.getElementById('loadingScreen').classList.add('hidden');
-        document.getElementById('gameContainer').classList.remove('hidden');
-        createBoard();
-    }
-}
-
-// ============ Game Logic ============
 
 function shuffle(array){
     for(let i=array.length-1;i>0;i--){
@@ -408,8 +414,57 @@ function createConfetti(){
     }
 }
 
-// بدء الفحص عند تحميل الصفحة
-checkDevice();
+// ============ Wheel Logic ============
+function initWheel(){
+    const wheel = document.getElementById("wheel");
+    const spinBtn = document.getElementById("spinBtn");
+    const result = document.getElementById("result");
+
+    const segmentCount = numbers.length;
+    const segmentAngle = 360 / segmentCount;
+    
+    const colors = ['#e74c3c', '#2ecc71', '#3498db'];
+
+    numbers.forEach((num, i)=>{
+        const segment = document.createElement("div");
+        segment.className = "segment";
+        segment.style.transform = `rotate(${i*segmentAngle}deg)`;
+        segment.style.backgroundColor = colors[i];
+        
+        const span = document.createElement("span");
+        span.textContent = num;
+        segment.appendChild(span);
+        
+        wheel.appendChild(segment);
+    });
+
+    let spinning = false;
+    let currentRotation = 0;
+
+    spinBtn.addEventListener("click", ()=>{
+        if(spinning) return;
+        spinning = true;
+        spinBtn.disabled = true;
+        result.textContent = "";
+
+        const randomIndex = Math.floor(Math.random()*segmentCount);
+        const spins = 5;
+        const extraDegrees = randomIndex * segmentAngle;
+        const totalRotation = currentRotation + spins*360 + extraDegrees;
+
+        wheel.style.transform = `rotate(${totalRotation}deg)`;
+        currentRotation = totalRotation;
+
+        setTimeout(()=>{
+            result.textContent = "🎊 الرقم الفائز: " + numbers[randomIndex];
+            spinning = false;
+            spinBtn.disabled = false;
+        }, 5000);
+    });
+}
+
+createBoard();
+initWheel();
 </script>
 
 </body>
