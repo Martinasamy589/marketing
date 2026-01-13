@@ -3,440 +3,126 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لعبة تطابق الأرقام وعجلة الحظ</title>
-
+<title>لعبة عجلة الحظ</title>
 <style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
-body{
-    font-family:Segoe UI,Tahoma;
-    background:linear-gradient(135deg,#667eea,#764ba2);
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg,#667eea,#764ba2);
     min-height:100vh;
     display:flex;
     justify-content:center;
-    align-items:flex-start;
+    align-items:center;
     color:#fff;
-    overflow-x:hidden;
-    padding-top:30px;
 }
-
-.container{
-    text-align:center;
-    z-index:2;
-    margin-bottom:50px;
+.container { text-align:center; }
+h1 { font-size:48px; margin-bottom:40px; text-shadow:2px 2px 8px rgba(0,0,0,0.3); }
+.wheel-container { position:relative; width:400px; height:400px; margin:0 auto; }
+#wheel {
+    width:100%; height:100%; border-radius:50%;
+    border:15px solid #facc15; position:relative;
+    transition:transform 5s cubic-bezier(0.17,0.67,0.12,0.99);
+    box-shadow:0 15px 50px rgba(0,0,0,0.5);
+    background: conic-gradient(
+        #e74c3c 0deg 120deg,
+        #3498db 120deg 240deg,
+        #2ecc71 240deg 360deg
+    );
 }
-
-h1{
-    margin-bottom:20px;
-}
-
-.info{
-    margin-bottom:15px;
-    font-size:18px;
-}
-
-.game-board{
-    display:grid;
-    grid-template-columns:repeat(3,120px);
-    gap:20px;
-    padding:25px;
-    background:rgba(255,255,255,0.15);
-    border-radius:15px;
-    justify-content:center;
-    margin:0 auto 50px auto;
-}
-
-.card{
-    width:120px;
-    height:120px;
-    transform-style:preserve-3d;
-    transition:transform 0.6s;
-    cursor:pointer;
-    position:relative;
-}
-
-.card.flipped{
-    transform:rotateY(180deg);
-}
-
-.card.matched{
-    opacity:0.6;
-    pointer-events:none;
-}
-
-.card-face{
-    position:absolute;
-    width:100%;
-    height:100%;
-    backface-visibility:hidden;
-    border-radius:10px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-size:36px;
-    font-weight:bold;
-}
-
-.card-front{
-    background:#5a67d8;
-}
-
-.card-back{
-    background:#fff;
-    color:#000;
-    transform:rotateY(180deg);
-}
-
-/* شاشة الاحتفال */
-.celebration{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.75);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
-    font-size:90px;
-    font-weight:bold;
-    color:#4ade80;
-    text-shadow:0 0 25px #22c55e;
-    animation:pop 0.5s ease;
-    z-index:5;
-}
-
-@keyframes pop{
-    from{transform:scale(0)}
-    to{transform:scale(1)}
-}
-
-.hidden{
-    display:none;
-}
-
-/* Confetti */
-.confetti{
-    position:fixed;
-    width:10px;
-    height:10px;
-    top:-10px;
-    animation:fall linear forwards;
-}
-
-@keyframes fall{
-    to{
-        transform:translateY(110vh) rotate(360deg);
-        opacity:0;
-    }
-}
-
-/* عجلة الحظ */
-.wheel-section{
-    margin-top:60px;
-    padding-top:40px;
-    border-top:2px solid rgba(255,255,255,0.3);
-}
-
-.wheel-section h2{
-    margin-bottom:30px;
-    font-size:32px;
-}
-
-.wheel-container{
-    margin:0 auto;
-    position:relative;
-    width:350px;
-    height:350px;
-}
-
-.wheel{
-    width:100%;
-    height:100%;
-    border-radius:50%;
-    border:12px solid #facc15;
-    position:relative;
-    overflow:hidden;
-    transition:transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99);
-    box-shadow:0 10px 40px rgba(0,0,0,0.4);
-}
-
-.segment{
-    position:absolute;
-    width:50%;
-    height:50%;
-    top:50%;
-    left:50%;
-    transform-origin:0% 0%;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    font-size:40px;
-    font-weight:bold;
-    color:#fff;
-    clip-path:polygon(0 0, 100% 0, 0 100%);
-    padding-right:60px;
-    padding-bottom:60px;
-}
-
-.segment span{
-    transform:rotate(-15deg);
-    text-shadow:3px 3px 8px rgba(0,0,0,0.7);
-}
-
-.wheel-center{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%, -50%);
-    width:100px;
-    height:100px;
-    background:#facc15;
-    border-radius:50%;
-    border:6px solid #f59e0b;
-    z-index:10;
-    box-shadow:0 6px 20px rgba(0,0,0,0.4);
-}
-
-#wheelPointer{
-    position:absolute;
-    top:-20px;
-    left:50%;
+#pointer {
+    position:absolute; top:-25px; left:50%;
     transform:translateX(-50%);
-    width:0;
-    height:0;
-    border-left:20px solid transparent;
-    border-right:20px solid transparent;
-    border-top:40px solid #facc15;
-    z-index:15;
-    filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    width:0; height:0;
+    border-left:25px solid transparent;
+    border-right:25px solid transparent;
+    border-top:50px solid #facc15;
+    z-index:20;
+    filter:drop-shadow(0 4px 10px rgba(0,0,0,0.4));
 }
-
-#spinBtn{
-    margin-top:30px;
-    padding:15px 40px;
-    font-size:20px;
-    border:none;
-    border-radius:12px;
-    cursor:pointer;
-    background:#facc15;
-    color:#000;
-    font-weight:bold;
-    transition:all 0.3s;
-    box-shadow:0 4px 15px rgba(250,204,21,0.4);
+.number {
+    position:absolute; font-size:40px; font-weight:bold;
+    color:#fff; text-shadow:2px 2px 8px rgba(0,0,0,0.8);
+    z-index:10; transform:translate(-50%, -50%);
 }
-
-#spinBtn:hover{
-    transform:translateY(-2px);
-    box-shadow:0 6px 20px rgba(250,204,21,0.6);
+.center-circle {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:110px; height:110px; background:#facc15; border-radius:50%;
+    border:8px solid #f59e0b; z-index:15; box-shadow:0 8px 25px rgba(0,0,0,0.5);
 }
-
-#spinBtn:active{
-    transform:translateY(0);
-}
-
-#spinBtn:disabled{
-    opacity:0.5;
-    cursor:not-allowed;
-}
-
-#result{
-    margin-top:25px;
-    font-size:26px;
-    font-weight:bold;
-    min-height:35px;
-    text-shadow:2px 2px 4px rgba(0,0,0,0.3);
-}
-
-@media (max-width: 600px){
-    .wheel-container{
-        width:280px;
-        height:280px;
-    }
-    
-    .segment span{
-        font-size:22px;
-    }
-}
+#spinBtn { margin-top:50px; padding:18px 50px; font-size:24px; font-weight:bold;
+border:none; border-radius:15px; cursor:pointer; background:#facc15; color:#000;
+transition: all 0.3s; box-shadow:0 6px 20px rgba(250,204,21,0.5);}
+#spinBtn:hover { transform:translateY(-3px); box-shadow:0 8px 30px rgba(250,204,21,0.7);}
+#spinBtn:active { transform:translateY(0);}
+#spinBtn:disabled { opacity:0.5; cursor:not-allowed;}
+#result { margin-top:30px; font-size:32px; font-weight:bold;
+min-height:40px; text-shadow:2px 2px 6px rgba(0,0,0,0.4); color:#4ade80;}
+@media (max-width:600px){ .wheel-container{ width:300px;height:300px;}
+.number{ font-size:30px;} h1{ font-size:36px;} }
 </style>
 </head>
-
 <body>
 
-<!-- اللعبة -->
-<div class="container" id="gameContainer">
-    <h1>🎯 لعبة تطابق الأرقام</h1>
-
-    <div class="info">
-        المحاولات: <span id="attempts">0</span>
-    </div>
-
-    <div class="game-board" id="gameBoard"></div>
-
-    <!-- عجلة الحظ -->
-    <div class="wheel-section">
-        <h2>🎡 عجلة الحظ</h2>
-        <div class="wheel-container">
-            <div id="wheelPointer"></div>
-            <div class="wheel" id="wheel">
-                <div class="wheel-center"></div>
-            </div>
-            <button id="spinBtn">ادفع العجلة</button>
-            <div id="result"></div>
-        </div>
+<div class="container">
+<h1>🎡 عجلة الحظ</h1>
+<div class="wheel-container">
+    <div id="pointer"></div>
+    <div class="wheel" id="wheel">
+        <div class="center-circle"></div>
     </div>
 </div>
-
-<!-- شاشة الاحتفال -->
-<div class="celebration hidden" id="celebration">
-    🎉 <span id="celebrationNumber"></span> 🎉
-    <div style="font-size:32px;margin-top:20px;">
-        مبروك 🎊 أول تطابق صح!
-    </div>
+<button id="spinBtn">ادفع العجلة</button>
+<div id="result"></div>
 </div>
 
 <script>
-// ============ Game Logic ============
-const numbers = [15, 20, 25];
-const cards = [...numbers, ...numbers];
+const wheel = document.getElementById('wheel');
+const spinBtn = document.getElementById('spinBtn');
+const result = document.getElementById('result');
 
-let flippedCards = [];
-let attempts = 0;
-let canFlip = true;
-let gameOver = false;
+const numbers = [15,25,20];
+const sections = numbers.length;
+const radius = 140;
 
-function shuffle(array){
-    for(let i=array.length-1;i>0;i--){
-        const j=Math.floor(Math.random()*(i+1));
-        [array[i],array[j]]=[array[j],array[i]];
-    }
-    return array;
-}
+// وضع الأرقام في وسط كل قسم بدقة
+numbers.forEach((num,i)=>{
+    const angle = (i + 0.5)*(360/sections);
+    const rad = (angle - 90) * Math.PI/180;
+    const x = 200 + radius*Math.cos(rad);
+    const y = 200 + radius*Math.sin(rad);
+    const div = document.createElement('div');
+    div.className='number';
+    div.style.left=x+'px';
+    div.style.top=y+'px';
+    div.textContent=num;
+    wheel.appendChild(div);
+});
 
-function createBoard(){
-    const board = document.getElementById("gameBoard");
-    shuffle(cards).forEach((number)=>{
-        const card = document.createElement("div");
-        card.className="card";
-        card.dataset.number=number;
+let spinning=false;
+let currentRotation=0;
 
-        card.innerHTML=`
-            <div class="card-face card-front">?</div>
-            <div class="card-face card-back">${number}</div>
-        `;
+spinBtn.addEventListener('click',()=>{
+    if(spinning) return;
+    spinning=true;
+    spinBtn.disabled=true;
+    result.textContent='';
 
-        card.addEventListener("click", flipCard);
-        board.appendChild(card);
-    });
-}
+    const spins=5+Math.floor(Math.random()*5);
+    const randomAngle=Math.random()*360;
+    const totalRotation=currentRotation+(spins*360)+randomAngle;
+    wheel.style.transform=`rotate(${totalRotation}deg)`;
 
-function flipCard(){
-    if(gameOver || !canFlip || this.classList.contains("matched")) return;
-    if(flippedCards.includes(this)) return;
-
-    this.classList.add("flipped");
-    flippedCards.push(this);
-
-    if(flippedCards.length === 2){
-        canFlip = false;
-        attempts++;
-        document.getElementById("attempts").textContent = attempts;
-        checkMatch();
-    }
-}
-
-function checkMatch(){
-    const [card1, card2] = flippedCards;
-
-    if(card1.dataset.number === card2.dataset.number){
-        gameOver = true;
-
-        card1.classList.add("matched");
-        card2.classList.add("matched");
-
-        showCelebration(card1.dataset.number);
-    }else{
-        setTimeout(()=>{
-            card1.classList.remove("flipped");
-            card2.classList.remove("flipped");
-            flippedCards = [];
-            canFlip = true;
-        }, 1000);
-    }
-}
-
-function showCelebration(number){
-    document.getElementById("celebrationNumber").textContent = number;
-    document.getElementById("celebration").classList.remove("hidden");
-    createConfetti();
-}
-
-function createConfetti(){
-    for(let i=0;i<70;i++){
-        const confetti = document.createElement("div");
-        confetti.className = "confetti";
-        confetti.style.left = Math.random()*100 + "vw";
-        confetti.style.backgroundColor = `hsl(${Math.random()*360},100%,50%)`;
-        confetti.style.animationDuration = (Math.random()*2 + 1) + "s";
-        document.body.appendChild(confetti);
-
-        setTimeout(()=>confetti.remove(),3000);
-    }
-}
-
-// ============ Wheel Logic ============
-function initWheel(){
-    const wheel = document.getElementById("wheel");
-    const spinBtn = document.getElementById("spinBtn");
-    const result = document.getElementById("result");
-
-    const segmentCount = numbers.length;
-    const segmentAngle = 360 / segmentCount;
-    
-    const colors = ['#e74c3c', '#2ecc71', '#3498db'];
-
-    numbers.forEach((num, i)=>{
-        const segment = document.createElement("div");
-        segment.className = "segment";
-        segment.style.transform = `rotate(${i*segmentAngle}deg)`;
-        segment.style.backgroundColor = colors[i];
-        
-        const span = document.createElement("span");
-        span.textContent = num;
-        segment.appendChild(span);
-        
-        wheel.appendChild(segment);
-    });
-
-    let spinning = false;
-    let currentRotation = 0;
-
-    spinBtn.addEventListener("click", ()=>{
-        if(spinning) return;
-        spinning = true;
-        spinBtn.disabled = true;
-        result.textContent = "";
-
-        const randomIndex = Math.floor(Math.random()*segmentCount);
-        const spins = 5;
-        const extraDegrees = randomIndex * segmentAngle;
-        const totalRotation = currentRotation + spins*360 + extraDegrees;
-
-        wheel.style.transform = `rotate(${totalRotation}deg)`;
-        currentRotation = totalRotation;
-
-        setTimeout(()=>{
-            result.textContent = "🎊 الرقم الفائز: " + numbers[randomIndex];
-            spinning = false;
-            spinBtn.disabled = false;
-        }, 5000);
-    });
-}
-
-createBoard();
-initWheel();
+   setTimeout(()=>{
+        const finalRotation = totalRotation % 360;
+        // المؤشر في الأعلى، فنحسب أي قسم يشير إليه
+        const normalizedAngle = (360 - finalRotation) % 360;
+        const winningIndex = Math.floor(normalizedAngle / (360/sections)) % sections;
+        result.textContent=`🎊 الرقم الفائز: ${numbers[winningIndex]}`;
+        spinning=false;
+        spinBtn.disabled=false;
+        currentRotation=totalRotation;
+    },5000);
+});
 </script>
 
 </body>
