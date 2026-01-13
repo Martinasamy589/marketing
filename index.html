@@ -413,18 +413,17 @@
                 return;
             }
 
+            // لو الكارت ده مقلوب من قبل في نفس المحاولة، متعملش حاجة
+            if (flippedCards.includes(this)) {
+                return;
+            }
+
             // قلب الكارت
             this.classList.add('flipped');
             flippedCards.push(this);
 
-            // لو ده أول كارت، خليه مفتوح واستنى التاني
-            if (flippedCards.length === 1) {
-                return;
-            }
-
-            // لو ده تاني كارت، منع أي تقليب إضافي
+            // لو ده تاني كارت، اعمل check
             if (flippedCards.length === 2) {
-                canFlip = false;
                 attempts++;
                 document.getElementById('attempts').textContent = attempts;
                 checkMatch();
@@ -447,12 +446,11 @@
                     gameActive = false;
                 }, 500);
             } else {
-                // غلط - قفل الكروت
+                // غلط - قفل الكروت وامسح الأرراي عشان تبدأ محاولة جديدة
                 setTimeout(() => {
                     card1.classList.remove('flipped');
                     card2.classList.remove('flipped');
                     flippedCards = [];
-                    canFlip = true;
                 }, 1000);
             }
         }
