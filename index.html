@@ -234,7 +234,7 @@
     </div>
 
     <script>
-        const symbols = ['15', '20', '25'];
+        const symbols = ['🍎', '🍌', '🍇', '🍓', '🍒', '🍊', '🥝', '🍉'];
         const cards = [...symbols, ...symbols];
         let flippedCards = [];
         let matchedPairs = 0;
@@ -409,7 +409,7 @@
         }
 
         function flipCard() {
-            if (!gameActive || this.classList.contains('flipped') || this.classList.contains('matched')) {
+            if (!gameActive || this.classList.contains('matched')) {
                 return;
             }
 
@@ -437,21 +437,17 @@
             const symbol2 = card2.dataset.symbol;
 
             if (symbol1 === symbol2) {
+                // كسب! أول زوج صح
                 card1.classList.add('matched');
                 card2.classList.add('matched');
-                matchedPairs++;
-
-                flippedCards = [];
-                canFlip = true;
-
-                if (matchedPairs === symbols.length) {
-                    setTimeout(() => {
-                        document.getElementById('result').innerHTML = 
-                            `<div class="win">🎉 مبروك! فزت باللعبة في ${attempts} محاولة! 🎉</div>`;
-                        gameActive = false;
-                    }, 500);
-                }
+                
+                setTimeout(() => {
+                    document.getElementById('result').innerHTML = 
+                        `<div class="win">🎉 مبروك! فزت باللعبة في ${attempts} محاولة! 🎉</div>`;
+                    gameActive = false;
+                }, 500);
             } else {
+                // غلط - قفل الكروت
                 setTimeout(() => {
                     card1.classList.remove('flipped');
                     card2.classList.remove('flipped');
