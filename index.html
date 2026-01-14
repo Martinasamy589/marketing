@@ -3,126 +3,237 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لعبة عجلة الحظ</title>
+<title>لعبة جمع الكوينز 🪙</title>
+
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-    background: linear-gradient(135deg,#667eea,#764ba2);
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
+body{
+    font-family: Arial, sans-serif;
+    text-align:center;
+    background:linear-gradient(to bottom,#a0e9ff,#70c1ff);
+}
+
+/* زرار البداية */
+button{
+    padding:14px 35px;
+    font-size:18px;
+    font-weight:bold;
     color:#fff;
+    border:none;
+    border-radius:40px;
+    background:linear-gradient(135deg,#00c6ff,#0072ff);
+    box-shadow:0 8px 0 #005ecb;
+    cursor:pointer;
+    transition:0.2s;
 }
-.container { text-align:center; }
-h1 { font-size:48px; margin-bottom:40px; text-shadow:2px 2px 8px rgba(0,0,0,0.3); }
-.wheel-container { position:relative; width:400px; height:400px; margin:0 auto; }
-#wheel {
-    width:100%; height:100%; border-radius:50%;
-    border:15px solid #facc15; position:relative;
-    transition:transform 5s cubic-bezier(0.17,0.67,0.12,0.99);
-    box-shadow:0 15px 50px rgba(0,0,0,0.5);
-    background: conic-gradient(
-        #e74c3c 0deg 120deg,
-        #3498db 120deg 240deg,
-        #2ecc71 240deg 360deg
-    );
+button:hover{
+    transform:translateY(2px);
+    box-shadow:0 5px 0 #005ecb;
 }
-#pointer {
-    position:absolute; top:-25px; left:50%;
-    transform:translateX(-50%);
-    width:0; height:0;
-    border-left:25px solid transparent;
-    border-right:25px solid transparent;
-    border-top:50px solid #facc15;
-    z-index:20;
-    filter:drop-shadow(0 4px 10px rgba(0,0,0,0.4));
+button:disabled{
+    background:#aaa;
+    box-shadow:none;
+    cursor:not-allowed;
 }
-.number {
-    position:absolute; font-size:40px; font-weight:bold;
-    color:#fff; text-shadow:2px 2px 8px rgba(0,0,0,0.8);
-    z-index:10; transform:translate(-50%, -50%);
+
+/* منطقة اللعب */
+#gameArea{
+    position:relative;
+    margin:20px auto;
+    width:400px;
+    height:500px;
+    background:#fff;
+    border-radius:15px;
+    border:4px solid #333;
+    overflow:hidden;
 }
-.center-circle {
-    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-    width:110px; height:110px; background:#facc15; border-radius:50%;
-    border:8px solid #f59e0b; z-index:15; box-shadow:0 8px 25px rgba(0,0,0,0.5);
+
+/* السلة */
+#basket{
+    position:absolute;
+    bottom:15px;
+    width:120px;
+    height:55px;
+    background:linear-gradient(to bottom,#ff8a00,#e65100);
+    border-radius:0 0 25px 25px;
+    border:4px solid #bf360c;
+    box-shadow:0 6px 0 #bf360c,inset 0 4px 6px rgba(255,255,255,.4);
 }
-#spinBtn { margin-top:50px; padding:18px 50px; font-size:24px; font-weight:bold;
-border:none; border-radius:15px; cursor:pointer; background:#facc15; color:#000;
-transition: all 0.3s; box-shadow:0 6px 20px rgba(250,204,21,0.5);}
-#spinBtn:hover { transform:translateY(-3px); box-shadow:0 8px 30px rgba(250,204,21,0.7);}
-#spinBtn:active { transform:translateY(0);}
-#spinBtn:disabled { opacity:0.5; cursor:not-allowed;}
-#result { margin-top:30px; font-size:32px; font-weight:bold;
-min-height:40px; text-shadow:2px 2px 6px rgba(0,0,0,0.4); color:#4ade80;}
-@media (max-width:600px){ .wheel-container{ width:300px;height:300px;}
-.number{ font-size:30px;} h1{ font-size:36px;} }
+#basket::before{
+    content:'';
+    position:absolute;
+    top:-18px;
+    left:30px;
+    width:60px;
+    height:14px;
+    border:4px solid #bf360c;
+    border-bottom:none;
+    border-radius:20px 20px 0 0;
+}
+
+/* الكوين */
+.coin{
+    position:absolute;
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    background:radial-gradient(circle at 30% 30%,#fff59d,#fbc02d);
+    box-shadow:0 0 10px rgba(255,215,0,.8);
+    top:0;
+}
+
+/* لوحة النتائج */
+#scoreBoard{
+    font-size:18px;
+    margin-top:10px;
+}
+
+/* رسالة النهاية */
+#overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.7);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+}
+#popup{
+    background:#fff;
+    padding:30px;
+    border-radius:15px;
+    width:320px;
+    text-align:center;
+}
+#popup h2{
+    margin-bottom:15px;
+}
+#popup p{
+    font-size:18px;
+}
 </style>
 </head>
+
 <body>
 
-<div class="container">
-<h1>🎡 عجلة الحظ</h1>
-<div class="wheel-container">
-    <div id="pointer"></div>
-    <div class="wheel" id="wheel">
-        <div class="center-circle"></div>
-    </div>
+<h1>لعبة جمع الكوينز 🪙</h1>
+<button id="startBtn">ابدأ اللعبة</button>
+
+<div id="gameArea">
+    <div id="basket"></div>
 </div>
-<button id="spinBtn">ادفع العجلة</button>
-<div id="result"></div>
+
+<div id="scoreBoard">
+    الوقت: <span id="timer">20</span> ثانية |
+    النقاط: <span id="score">0</span>
+</div>
+
+<div id="overlay">
+    <div id="popup">
+        <h2 id="popupTitle"></h2>
+        <p id="popupText"></p>
+    </div>
 </div>
 
 <script>
-const wheel = document.getElementById('wheel');
-const spinBtn = document.getElementById('spinBtn');
-const result = document.getElementById('result');
+const basket=document.getElementById("basket");
+const gameArea=document.getElementById("gameArea");
+const scoreSpan=document.getElementById("score");
+const timerSpan=document.getElementById("timer");
+const startBtn=document.getElementById("startBtn");
+const overlay=document.getElementById("overlay");
+const popupTitle=document.getElementById("popupTitle");
+const popupText=document.getElementById("popupText");
 
-const numbers = [15,25,20];
-const sections = numbers.length;
-const radius = 140;
+let score=0;
+let timeLeft=20;
+let gameRunning=false;
+let playedOnce=false;
+let gameInterval,coinInterval;
 
-// وضع الأرقام في وسط كل قسم بدقة
-numbers.forEach((num,i)=>{
-    const angle = (i + 0.5)*(360/sections);
-    const rad = (angle - 90) * Math.PI/180;
-    const x = 200 + radius*Math.cos(rad);
-    const y = 200 + radius*Math.sin(rad);
-    const div = document.createElement('div');
-    div.className='number';
-    div.style.left=x+'px';
-    div.style.top=y+'px';
-    div.textContent=num;
-    wheel.appendChild(div);
+/* تحريك السلة */
+gameArea.addEventListener("mousemove",e=>{
+    if(!gameRunning)return;
+    const rect=gameArea.getBoundingClientRect();
+    let x=e.clientX-rect.left-basket.offsetWidth/2;
+    x=Math.max(0,Math.min(x,gameArea.clientWidth-basket.offsetWidth));
+    basket.style.left=x+"px";
 });
 
-let spinning=false;
-let currentRotation=0;
+/* إنشاء كوين */
+function createCoin(){
+    if(!gameRunning)return;
+    const coin=document.createElement("div");
+    coin.className="coin";
+    coin.style.left=Math.random()*(gameArea.clientWidth-30)+"px";
+    gameArea.appendChild(coin);
 
-spinBtn.addEventListener('click',()=>{
-    if(spinning) return;
-    spinning=true;
-    spinBtn.disabled=true;
-    result.textContent='';
+    let y=0;
+    const fall=setInterval(()=>{
+        if(!gameRunning){coin.remove();clearInterval(fall);return;}
+        y+=5;
+        coin.style.top=y+"px";
 
-    const spins=5+Math.floor(Math.random()*5);
-    const randomAngle=Math.random()*360;
-    const totalRotation=currentRotation+(spins*360)+randomAngle;
-    wheel.style.transform=`rotate(${totalRotation}deg)`;
+        const c=coin.getBoundingClientRect();
+        const b=basket.getBoundingClientRect();
 
-   setTimeout(()=>{
-        const finalRotation = totalRotation % 360;
-        // المؤشر في الأعلى، فنحسب أي قسم يشير إليه
-        const normalizedAngle = (360 - finalRotation) % 360;
-        const winningIndex = Math.floor(normalizedAngle / (360/sections)) % sections;
-        result.textContent=`🎊 الرقم الفائز: ${numbers[winningIndex]}`;
-        spinning=false;
-        spinBtn.disabled=false;
-        currentRotation=totalRotation;
-    },5000);
-});
+        if(c.bottom>=b.top&&c.left<b.right&&c.right>b.left){
+            score++;
+            scoreSpan.textContent=score;
+            coin.remove();
+            clearInterval(fall);
+        }
+        if(y>gameArea.clientHeight){
+            coin.remove();
+            clearInterval(fall);
+        }
+    },30);
+}
+
+/* الخصم */
+function getDiscount(s){
+    if(s>=23)return 25;
+    if(s>=18)return 20;
+    if(s>=15)return 15;
+    return 0;
+}
+
+/* بدء اللعبة */
+function startGame(){
+    if(playedOnce)return;
+    playedOnce=true;
+    gameRunning=true;
+    score=0;
+    timeLeft=20;
+    scoreSpan.textContent=0;
+    timerSpan.textContent=20;
+    startBtn.disabled=true;
+
+    coinInterval=setInterval(createCoin,800);
+    gameInterval=setInterval(()=>{
+        timeLeft--;
+        timerSpan.textContent=timeLeft;
+        if(timeLeft<=0)endGame();
+    },1000);
+}
+
+/* إنهاء اللعبة */
+function endGame(){
+    gameRunning=false;
+    clearInterval(gameInterval);
+    clearInterval(coinInterval);
+
+    const d=getDiscount(score);
+    if(d>0){
+        popupTitle.textContent="🎉 مبروك!";
+        popupText.textContent=`جمعت ${score} كوين\nخصم ${d}%`;
+    }else{
+        popupTitle.textContent="⏰ انتهى الوقت";
+        popupText.textContent=`جمعت ${score} كوين\nحظ أوفر`;
+    }
+    overlay.style.display="flex";
+}
+
+startBtn.addEventListener("click",startGame);
 </script>
 
 </body>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لعبة عجلة الحظ</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:#fff;
+}
+.container { text-align:center; }
+h1 { font-size:48px; margin-bottom:40px; text-shadow:2px 2px 8px rgba(0,0,0,0.3); }
+.wheel-container { position:relative; width:400px; height:400px; margin:0 auto; }
+#wheel {
+    width:100%; height:100%; border-radius:50%;
+    border:15px solid #facc15; position:relative;
+    transition:transform 5s cubic-bezier(0.17,0.67,0.12,0.99);
+    box-shadow:0 15px 50px rgba(0,0,0,0.5);
+    background: conic-gradient(
+        #e74c3c 0deg 120deg,
+        #3498db 120deg 240deg,
+        #2ecc71 240deg 360deg
+    );
+}
+#pointer {
+    position:absolute; top:-25px; left:50%;
+    transform:translateX(-50%);
+    width:0; height:0;
+    border-left:25px solid transparent;
+    border-right:25px solid transparent;
+    border-top:50px solid #facc15;
+    z-index:20;
+    filter:drop-shadow(0 4px 10px rgba(0,0,0,0.4));
+}
+.number {
+    position:absolute; font-size:40px; font-weight:bold;
+    color:#fff; text-shadow:2px 2px 8px rgba(0,0,0,0.8);
+    z-index:10; transform:translate(-50%, -50%);
+}
+.center-circle {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:110px; height:110px; background:#facc15; border-radius:50%;
+    border:8px solid #f59e0b; z-index:15; box-shadow:0 8px 25px rgba(0,0,0,0.5);
+}
+#spinBtn { margin-top:50px; padding:18px 50px; font-size:24px; font-weight:bold;
+border:none; border-radius:15px; cursor:pointer; background:#facc15; color:#000;
+transition: all 0.3s; box-shadow:0 6px 20px rgba(250,204,21,0.5);}
+#spinBtn:hover { transform:translateY(-3px); box-shadow:0 8px 30px rgba(250,204,21,0.7);}
+#spinBtn:active { transform:translateY(0);}
+#spinBtn:disabled { opacity:0.5; cursor:not-allowed;}
+#result { margin-top:30px; font-size:32px; font-weight:bold;
+min-height:40px; text-shadow:2px 2px 6px rgba(0,0,0,0.4); color:#4ade80;}
+@media (max-width:600px){ .wheel-container{ width:300px;height:300px;}
+.number{ font-size:30px;} h1{ font-size:36px;} }
+</style>
+</head>
+<body>
+
+<div class="container">
+<h1>🎡 عجلة الحظ</h1>
+<div class="wheel-container">
+    <div id="pointer"></div>
+    <div class="wheel" id="wheel">
+        <div class="center-circle"></div>
+    </div>
+</div>
+<button id="spinBtn">ادفع العجلة</button>
+<div id="result"></div>
+</div>
+
+<script>
+const wheel = document.getElementById('wheel');
+const spinBtn = document.getElementById('spinBtn');
+const result = document.getElementById('result');
+
+const numbers = [15,25,20];
+const sections = numbers.length;
+const radius = 140;
+
+// وضع الأرقام في وسط كل قسم بدقة
+numbers.forEach((num,i)=>{
+    const angle = (i + 0.5)*(360/sections);
+    const rad = (angle - 90) * Math.PI/180;
+    const x = 200 + radius*Math.cos(rad);
+    const y = 200 + radius*Math.sin(rad);
+    const div = document.createElement('div');
+    div.className='number';
+    div.style.left=x+'px';
+    div.style.top=y+'px';
+    div.textContent=num;
+    wheel.appendChild(div);
+});
+
+let spinning=false;
+let currentRotation=0;
+
+spinBtn.addEventListener('click',()=>{
+    if(spinning) return;
+    spinning=true;
+    spinBtn.disabled=true;
+    result.textContent='';
+
+    const spins=5+Math.floor(Math.random()*5);
+    const randomAngle=Math.random()*360;
+    const totalRotation=currentRotation+(spins*360)+randomAngle;
+    wheel.style.transform=`rotate(${totalRotation}deg)`;
+
+   setTimeout(()=>{
+        const finalRotation = totalRotation % 360;
+        // المؤشر في الأعلى، فنحسب أي قسم يشير إليه
+        const normalizedAngle = (360 - finalRotation) % 360;
+        const winningIndex = Math.floor(normalizedAngle / (360/sections)) % sections;
+        result.textContent=`🎊 الرقم الفائز: ${numbers[winningIndex]}`;
+        spinning=false;
+        spinBtn.disabled=false;
+        currentRotation=totalRotation;
+    },5000);
+});
+</script>
+
+</body>
+</html>
